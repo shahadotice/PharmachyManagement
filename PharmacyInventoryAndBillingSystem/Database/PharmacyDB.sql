@@ -151,6 +151,12 @@ BEGIN
             SET @NewSalesId = @SalesId;
             
             -- Delete existing details
+			      UPDATE i
+        SET i.Quantity = i.Quantity + sd.Quantity
+        FROM Medicines i
+        INNER JOIN SalesDetail sd ON i.MedicineId = sd.MedicineId 
+            AND i.BatchNo = sd.BatchNo
+        WHERE sd.SalesId = @SalesId;
             DELETE FROM SalesDetail WHERE SalesId = @SalesId;
         END
 
@@ -198,32 +204,10 @@ AS
 BEGIN
     SET NOCOUNT ON;
     
-    -- Return all dashboard statistics in a single result set
-    SELECT 
-        -- Today's statistics
-        (SELECT COUNT(*) FROM SalesMaster WHERE CAST(InvoiceDate AS DATE) = CAST(GETDATE() AS DATE)) AS TodaySalesCount,
-        (SELECT ISNULL(SUM(GrandTotal), 0) FROM SalesMaster WHERE CAST(InvoiceDate AS DATE) = CAST(GETDATE() AS DATE)) AS TodayRevenue,
-        
-        -- Current week's statistics
-        (SELECT COUNT(*) FROM SalesMaster 
-         WHERE DATEPART(WEEK, InvoiceDate) = DATEPART(WEEK, GETDATE())
-         AND DATEPART(YEAR, InvoiceDate) = DATEPART(YEAR, GETDATE())) AS WeekSalesCount,
-        (SELECT ISNULL(SUM(GrandTotal), 0) FROM SalesMaster 
-         WHERE DATEPART(WEEK, InvoiceDate) = DATEPART(WEEK, GETDATE())
-         AND DATEPART(YEAR, InvoiceDate) = DATEPART(YEAR, GETDATE())) AS WeekRevenue,
-        
-        -- Current month's statistics
-        (SELECT COUNT(*) FROM SalesMaster 
-         WHERE MONTH(InvoiceDate) = MONTH(GETDATE())
-         AND YEAR(InvoiceDate) = YEAR(GETDATE())) AS MonthSalesCount,
-        (SELECT ISNULL(SUM(GrandTotal), 0) FROM SalesMaster 
-         WHERE MONTH(InvoiceDate) = MONTH(GETDATE())
-         AND YEAR(InvoiceDate) = YEAR(GETDATE())) AS MonthRevenue,
-        
-        -- Total medicines count
-        (SELECT COUNT(*) FROM Medicines) AS TotalMedicines,
-        
-        -- Low stock medicines count (quantity < 10)
-        (SELECT COUNT(*) FROM Medicines WHERE Quantity < 10) AS LowStockMedicines;
+select sum(GrandTotal) as TotalSalesAmount, 
+       (select sum(UnitPrice * Quantity)  from [dbo].[Medicines]
+       where cast(CreatedDate as date)<=cast(GETDATE() as date)) as TotalStokesAmount
+from [dbo].[SalesMaster]
+where cast(CreatedDate as date)<=cast(GETDATE() as date)
 END
 GO
