@@ -42,6 +42,9 @@ namespace PharmacyInventoryAndBillingSystem
         {
             invoiceListView.Visible = true;
             invoiceFormView.Visible = false;
+           
+            lblMessage.Visible = false;
+            lblMessage.Text = "";
             LoadInvoices();
         }
 
@@ -49,6 +52,10 @@ namespace PharmacyInventoryAndBillingSystem
         {
             invoiceListView.Visible = false;
             invoiceFormView.Visible = true;
+            
+            
+            lblMessage.Visible = false;
+            lblMessage.Text = "";
             
             if (string.IsNullOrEmpty(hdnSalesId.Value))
             {
@@ -310,15 +317,14 @@ namespace PharmacyInventoryAndBillingSystem
                 decimal discountValue = Convert.ToDecimal(txtDiscount.Text);
                 decimal discount = 0;
                 
-                // Calculate discount based on percentage checkbox
+                
                 if (chkDiscountPercentage.Checked)
                 {
-                    // Discount is a percentage of subtotal
+                   
                     discount = (subTotal * discountValue) / 100;
                 }
                 else
                 {
-                    // Discount is a fixed amount
                     discount = discountValue;
                 }
                 

@@ -177,7 +177,7 @@
         var medicineRows = {}; 
         
         $(document).ready(function () {
-            // Initialize button visibility - Add visible, Update hidden
+          
             $('#btnAddMedicine').css('display', 'inline-flex');
             $('#btnUpdateMedicine').css('display', 'none');
             editingRowId = null;
@@ -204,12 +204,12 @@
                 calculateLineTotal();
             });
             
-            // Add event handler for unit price changes
+            
             $('#txtUnitPrice').on('input change', function() {
                 calculateLineTotal();
             });
             
-            // Add event handler for discount percentage checkbox
+            
             $('#<%= chkDiscountPercentage.ClientID %>').on('change', function() {
                 calculateTotals();
             });
@@ -311,7 +311,7 @@
             $('#txtQuantity').val(1);
             $('#txtUnitPrice').val('');
             $('#txtLineTotal').val('');
-            // Reset to add mode
+            
             $('#btnAddMedicine').css('display', 'inline-flex');
             $('#btnUpdateMedicine').css('display', 'none');
             editingRowId = null;
@@ -343,9 +343,20 @@
             }
             
             
-            if (medicineRows[medicineId]) {
+            var existingRow = null;
+            $('#tbodyDetails tr:not(#emptyRow)').each(function() {
+                var row = $(this);
+                var rowMedicineId = row.data('medicine-id');
+                var rowUnitPrice = parseFloat(row.find('.row-unit-price').text()) || 0;
                 
-                var existingRow = medicineRows[medicineId];
+                if (rowMedicineId == medicineId && Math.abs(rowUnitPrice - unitPrice) < 0.01) {
+                    existingRow = row;
+                    return false; 
+                }
+            });
+            
+            if (existingRow) {
+               
                 var existingQuantity = parseInt(existingRow.find('.row-quantity').text());
                 var newQuantity = existingQuantity + quantity;
                 var newLineTotal = newQuantity * unitPrice;
@@ -355,12 +366,14 @@
                 existingRow.data('quantity', newQuantity);
                 existingRow.data('line-total', newLineTotal);
             } else {
-               
+                
                 $('#emptyRow').hide();
                 
-                var rowId = 'row_' + medicineId;
+              
+                var rowId = 'row_' + medicineId + '_' + Date.now();
                 var row = $('<tr id="' + rowId + '"></tr>');
                 row.data('medicine-id', medicineId);
+                row.data('unit-price', unitPrice);
                 row.data('quantity', quantity);
                 row.data('line-total', lineTotal);
                 
@@ -376,7 +389,10 @@
                     '</td>');
                 
                 $('#tbodyDetails').append(row);
-                medicineRows[medicineId] = row;
+                
+                
+                var rowKey = medicineId + '_' + unitPrice.toFixed(2);
+                medicineRows[rowKey] = row;
                 
                
                 row.find('.btn-edit-row').click(function() {
@@ -407,7 +423,7 @@
             $('#txtUnitPrice').val(unitPrice);
             calculateLineTotal();
             
-            // Switch to edit mode - hide Add, show Update
+            
             $('#btnAddMedicine').css('display', 'none');
             $('#btnUpdateMedicine').css('display', 'inline-flex');
             
@@ -420,8 +436,12 @@
             }
             
             var row = $('#' + editingRowId);
-            var medicineId = row.data('medicine-id');
+            var oldMedicineId = row.data('medicine-id');
+            var oldUnitPrice = parseFloat(row.find('.row-unit-price').text()) || 0;
+            var oldRowKey = oldMedicineId + '_' + oldUnitPrice.toFixed(2);
+            
             var selectedOption = $('#ddlMedicine option:selected');
+            var medicineId = selectedOption.val();
             var medicineName = selectedOption.text();
             var batchNo = $('#txtBatchNo').val();
             var expiryDate = $('#txtExpiryDate').val();
@@ -445,8 +465,24 @@
             row.find('.row-quantity').text(quantity);
             row.find('.row-unit-price').text(unitPrice.toFixed(2));
             row.find('.row-line-total').text(lineTotal.toFixed(2));
+            row.data('medicine-id', medicineId);
+            row.data('unit-price', unitPrice);
             row.data('quantity', quantity);
             row.data('line-total', lineTotal);
+            
+            
+            var newRowKey = medicineId + '_' + unitPrice.toFixed(2);
+            if (oldRowKey !== newRowKey) {
+                
+                if (medicineRows[oldRowKey] && medicineRows[oldRowKey].attr('id') === row.attr('id')) {
+                    delete medicineRows[oldRowKey];
+                }
+              
+                medicineRows[newRowKey] = row;
+            } else if (medicineRows[oldRowKey] && medicineRows[oldRowKey].attr('id') === row.attr('id')) {
+                
+                medicineRows[oldRowKey] = row;
+            }
             
             cancelEdit();
             calculateTotals();
@@ -454,7 +490,7 @@
         
         function cancelEdit() {
             clearMedicineInputs();
-            // clearMedicineInputs already handles button visibility, but ensure it's set
+            
             $('#btnAddMedicine').css('display', 'inline-flex');
             $('#btnUpdateMedicine').css('display', 'none');
             editingRowId = null;
@@ -463,7 +499,14 @@
         function deleteRow(row) {
             if (confirm('Are you sure you want to delete this medicine?')) {
                 var medicineId = row.data('medicine-id');
-                delete medicineRows[medicineId];
+                var unitPrice = parseFloat(row.find('.row-unit-price').text()) || 0;
+                var rowKey = medicineId + '_' + unitPrice.toFixed(2);
+                
+                
+                if (medicineRows[rowKey] && medicineRows[rowKey].attr('id') === row.attr('id')) {
+                    delete medicineRows[rowKey];
+                }
+                
                 row.remove();
                 
                 
@@ -510,9 +553,14 @@
             
             $('#emptyRow').hide();
             
-            var rowId = 'row_' + medicineId;
+           
+            var rowKey = medicineId + '_' + unitPrice.toFixed(2);
+            
+            
+            var rowId = 'row_' + medicineId + '_' + Date.now();
             var row = $('<tr id="' + rowId + '"></tr>');
             row.data('medicine-id', medicineId);
+            row.data('unit-price', unitPrice);
             row.data('quantity', quantity);
             row.data('line-total', lineTotal);
             
@@ -528,7 +576,7 @@
                 '</td>');
             
             $('#tbodyDetails').append(row);
-            medicineRows[medicineId] = row;
+            medicineRows[rowKey] = row;
             
           
             row.find('.btn-edit-row').click(function() {
@@ -551,16 +599,16 @@
             var discount = 0;
             
             if (isPercentage) {
-                // Calculate discount as percentage of subtotal
+               
                 discount = (subTotal * discountValue) / 100;
             } else {
-                // Use discount as fixed amount
+               
                 discount = discountValue;
             }
             
             var grandTotal = subTotal - discount;
             
-            // Ensure grand total doesn't go negative
+           
             if (grandTotal < 0) {
                 grandTotal = 0;
             }

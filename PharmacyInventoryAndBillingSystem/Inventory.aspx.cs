@@ -81,11 +81,105 @@ namespace PharmacyInventoryAndBillingSystem
             if (ViewState["CurrentMedicineId"] != null)
             {
                 int medicineId = Convert.ToInt32(ViewState["CurrentMedicineId"]);
-                string medicineName = txtModalMedicineName.Text.Trim();
                 
+               
+                string medicineName = txtModalMedicineName.Text?.Trim() ?? "";
                 if (string.IsNullOrWhiteSpace(medicineName))
                 {
                     ShowMessage("Please enter a medicine name.", true);
+                    return;
+                }
+                if (medicineName.Length > 200)
+                {
+                    ShowMessage("Medicine name cannot exceed 200 characters.", true);
+                    return;
+                }
+                
+               
+                string batchNo = txtModalBatchNo.Text?.Trim() ?? "";
+                if (string.IsNullOrWhiteSpace(batchNo))
+                {
+                    ShowMessage("Please enter batch number.", true);
+                    return;
+                }
+                if (batchNo.Length > 50)
+                {
+                    ShowMessage("Batch number cannot exceed 50 characters.", true);
+                    return;
+                }
+                
+              
+                string expiryDateStr = txtModalExpiryDate.Text?.Trim() ?? "";
+                if (string.IsNullOrWhiteSpace(expiryDateStr))
+                {
+                    ShowMessage("Please enter expiry date.", true);
+                    return;
+                }
+                
+                DateTime expiryDate;
+                if (!DateTime.TryParse(expiryDateStr, out expiryDate))
+                {
+                    ShowMessage("Please enter a valid expiry date.", true);
+                    return;
+                }
+                
+               
+                string quantityStr = txtModalQuantity.Text?.Trim() ?? "";
+                if (string.IsNullOrWhiteSpace(quantityStr))
+                {
+                    ShowMessage("Please enter quantity.", true);
+                    return;
+                }
+                
+                int quantity = 0;
+                if (!int.TryParse(quantityStr, out quantity))
+                {
+                    ShowMessage("Please enter a valid quantity (must be a whole number).", true);
+                    return;
+                }
+                if (quantity < 0)
+                {
+                    ShowMessage("Quantity cannot be negative.", true);
+                    return;
+                }
+                
+                
+                string unitPriceStr = txtModalUnitPrice.Text?.Trim() ?? "";
+                if (string.IsNullOrWhiteSpace(unitPriceStr))
+                {
+                    ShowMessage("Please enter unit price.", true);
+                    return;
+                }
+                
+                decimal unitPrice = 0;
+                if (!decimal.TryParse(unitPriceStr, out unitPrice))
+                {
+                    ShowMessage("Please enter a valid unit price.", true);
+                    return;
+                }
+                if (unitPrice <= 0)
+                {
+                    ShowMessage("Unit price must be greater than 0.", true);
+                    return;
+                }
+                
+               
+                string sellsPriceStr = txtModalSellsPrice.Text?.Trim() ?? "";
+                if (string.IsNullOrWhiteSpace(sellsPriceStr))
+                {
+                    ShowMessage("Please enter sells price.", true);
+                    return;
+                }
+                
+                decimal sellsPrice = 0;
+                if (!decimal.TryParse(sellsPriceStr, out sellsPrice))
+                {
+                    ShowMessage("Please enter a valid sells price.", true);
+                    return;
+                }
+                if (sellsPrice <= 0)
+                {
+                    ShowMessage("Sells price must be greater than 0.", true);
                     return;
                 }
                 
@@ -93,12 +187,12 @@ namespace PharmacyInventoryAndBillingSystem
                 {
                     MedicineId = medicineId,
                     MedicineName = medicineName,
-                    BatchNo = txtModalBatchNo.Text,
-                    ExpiryDate = Convert.ToDateTime(txtModalExpiryDate.Text),
-                    Quantity = Convert.ToInt32(txtModalQuantity.Text),
-                    UnitPrice = Convert.ToDecimal(txtModalUnitPrice.Text),
-                    SellsPrice = Convert.ToDecimal(txtModalSellsPrice.Text),
-                    Description = txtModalDescription.Text
+                    BatchNo = batchNo,
+                    ExpiryDate = expiryDate,
+                    Quantity = quantity,
+                    UnitPrice = unitPrice,
+                    SellsPrice = sellsPrice,
+                    Description = txtModalDescription.Text?.Trim() ?? ""
                 };
 
                 if (medicineBLL.UpdateMedicine(medicine))
@@ -124,7 +218,7 @@ namespace PharmacyInventoryAndBillingSystem
             txtModalBatchNo.ReadOnly = false;
             txtModalExpiryDate.Text = DateTime.Now.AddYears(1).ToString("yyyy-MM-dd");
             txtModalExpiryDate.ReadOnly = false;
-            txtModalQuantity.Text = "0";
+            txtModalQuantity.Text = "1";
             txtModalQuantity.ReadOnly = false;
             txtModalUnitPrice.Text = "0";
             txtModalUnitPrice.ReadOnly = false;
@@ -139,20 +233,32 @@ namespace PharmacyInventoryAndBillingSystem
 
         protected void btnSaveAdd_Click(object sender, EventArgs e)
         {
-            string medicineName = txtModalMedicineName.Text?.Trim() ?? "";
             
+            string medicineName = txtModalMedicineName.Text?.Trim() ?? "";
             if (string.IsNullOrWhiteSpace(medicineName))
             {
                 ShowMessage("Please enter a medicine name.", true);
                 return;
             }
+            if (medicineName.Length > 200)
+            {
+                ShowMessage("Medicine name cannot exceed 200 characters.", true);
+                return;
+            }
             
+           
             string batchNo = txtModalBatchNo.Text?.Trim() ?? "";
             if (string.IsNullOrWhiteSpace(batchNo))
             {
                 ShowMessage("Please enter batch number.", true);
                 return;
             }
+            if (batchNo.Length > 50)
+            {
+                ShowMessage("Batch number cannot exceed 50 characters.", true);
+                return;
+            }
+            
             
             string expiryDateStr = txtModalExpiryDate.Text?.Trim() ?? "";
             if (string.IsNullOrWhiteSpace(expiryDateStr))
@@ -168,28 +274,63 @@ namespace PharmacyInventoryAndBillingSystem
                 return;
             }
             
-            string quantityStr = txtModalQuantity.Text?.Trim() ?? "0";
-            string unitPriceStr = txtModalUnitPrice.Text?.Trim() ?? "0";
-            string sellsPriceStr = txtModalSellsPrice.Text?.Trim() ?? "0";
+           
+            string quantityStr = txtModalQuantity.Text?.Trim() ?? "";
+            if (string.IsNullOrWhiteSpace(quantityStr))
+            {
+                ShowMessage("Please enter quantity.", true);
+                return;
+            }
             
             int quantity = 0;
-            if (!string.IsNullOrWhiteSpace(quantityStr) && !int.TryParse(quantityStr, out quantity))
+            if (!int.TryParse(quantityStr, out quantity))
             {
-                ShowMessage("Please enter a valid quantity.", true);
+                ShowMessage("Please enter a valid quantity (must be a whole number).", true);
+                return;
+            }
+            if (quantity < 1)
+            {
+                ShowMessage("Quantity must be 1 or greater.", true);
+                return;
+            }
+            
+           
+            string unitPriceStr = txtModalUnitPrice.Text?.Trim() ?? "";
+            if (string.IsNullOrWhiteSpace(unitPriceStr))
+            {
+                ShowMessage("Please enter unit price.", true);
                 return;
             }
             
             decimal unitPrice = 0;
-            if (!string.IsNullOrWhiteSpace(unitPriceStr) && !decimal.TryParse(unitPriceStr, out unitPrice))
+            if (!decimal.TryParse(unitPriceStr, out unitPrice))
             {
                 ShowMessage("Please enter a valid unit price.", true);
                 return;
             }
+            if (unitPrice <= 0)
+            {
+                ShowMessage("Unit price must be greater than 0.", true);
+                return;
+            }
+            
+            
+            string sellsPriceStr = txtModalSellsPrice.Text?.Trim() ?? "";
+            if (string.IsNullOrWhiteSpace(sellsPriceStr))
+            {
+                ShowMessage("Please enter sells price.", true);
+                return;
+            }
             
             decimal sellsPrice = 0;
-            if (!string.IsNullOrWhiteSpace(sellsPriceStr) && !decimal.TryParse(sellsPriceStr, out sellsPrice))
+            if (!decimal.TryParse(sellsPriceStr, out sellsPrice))
             {
                 ShowMessage("Please enter a valid sells price.", true);
+                return;
+            }
+            if (sellsPrice <= 0)
+            {
+                ShowMessage("Sells price must be greater than 0.", true);
                 return;
             }
             
@@ -289,36 +430,35 @@ namespace PharmacyInventoryAndBillingSystem
 
                 List<Medicine> inventoryList = medicineBLL.GetAllMedicines();
 
-                // Create PDF document
+                
                 Document document = new Document(PageSize.A4.Rotate(), 10f, 10f, 10f, 10f);
                 MemoryStream memoryStream = new MemoryStream();
                 PdfWriter writer = PdfWriter.GetInstance(document, memoryStream);
                 document.Open();
 
-                // Set font
                 Font titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18, BaseColor.BLACK);
                 Font headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10, BaseColor.WHITE);
                 Font cellFont = FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.BLACK);
 
-                // Title
+               
                 Paragraph title = new Paragraph("Pharmacy Inventory Report", titleFont);
                 title.Alignment = Element.ALIGN_CENTER;
                 title.SpacingAfter = 20f;
                 document.Add(title);
 
-                // Report Date
+                
                 Paragraph reportDate = new Paragraph("Generated on: " + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
                     FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.GRAY));
                 reportDate.Alignment = Element.ALIGN_RIGHT;
                 reportDate.SpacingAfter = 10f;
                 document.Add(reportDate);
 
-                // Create table
+                
                 PdfPTable table = new PdfPTable(5);
                 table.WidthPercentage = 100;
                 table.SetWidths(new float[] { 2f, 2f, 2f, 1.5f, 1.5f });
 
-                // Table headers
+               
                 string[] headers = { "Medicine Name",  "Batch No",
                     "Expiry Date", "Total Qty",  "Unit Price" };
 
@@ -331,7 +471,7 @@ namespace PharmacyInventoryAndBillingSystem
                     table.AddCell(cell);
                 }
 
-                // Table data
+                
                 foreach (var item in inventoryList)
                 {
                     table.AddCell(new PdfPCell(new Phrase(item.MedicineName ?? "", cellFont)) { Padding = 5f });
@@ -346,7 +486,7 @@ namespace PharmacyInventoryAndBillingSystem
 
                 document.Add(table);
 
-                // Summary
+               
                 Paragraph summary = new Paragraph();
                 summary.SpacingBefore = 20f;
                 summary.Add(new Chunk("Total Records: ", FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10, BaseColor.BLACK)));
@@ -355,7 +495,7 @@ namespace PharmacyInventoryAndBillingSystem
 
                 document.Close();
 
-                // Send PDF to browser
+               
                 Response.Clear();
                 Response.ContentType = "application/pdf";
                 Response.AddHeader("content-disposition", "attachment;filename=Inventory_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".pdf");

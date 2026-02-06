@@ -28,7 +28,7 @@
                     <asp:Label ID="lblCurrentDate" runat="server"></asp:Label>
                 </h3>
                 <div class="dashboard">
-                    <div class="stat-card stat-card-today" id="statStockAmount" style="cursor: pointer;" onclick="openStockModal()">
+                    <div class="stat-card stat-card-today stat-card-link" id="statStockAmount" style="cursor: pointer;" onclick="openStockModal()" title="Click here to see the breakdown">
 
                         <div class="stat-content">
                             <div class="stat-label">Total Stock Amount</div>
@@ -37,7 +37,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="stat-card stat-card-today" id="statSalesAmount" style="cursor: pointer;" onclick="openSalesModal()">
+                    <div class="stat-card stat-card-today stat-card-link" id="statSalesAmount" style="cursor: pointer;" onclick="openSalesModal()" title="Click here to see the breakdown">
 
                         <div class="stat-content">
                             <div class="stat-label">Total Sales Amount</div>
@@ -115,6 +115,48 @@
             </div>
         </div>
     </div>
+
+    <style type="text/css">
+        /* Hover link effect for stat cards */
+        .stat-card-link {
+            position: relative;
+        }
+
+        .stat-card-link:hover .stat-label,
+        .stat-card-link:hover .stat-value {
+            color: #3498db !important;
+            text-decoration: underline;
+        }
+
+        .stat-card-link:hover::after {
+            content: "Click here to see the breakdown";
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #2c3e50;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            pointer-events: none;
+        }
+
+        .stat-card-link:hover::before {
+            content: "";
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-bottom-color: #2c3e50;
+            z-index: 1001;
+            pointer-events: none;
+        }
+    </style>
 
     <script type="text/javascript">
         // Initialize arrays (will be populated by server-side script)
